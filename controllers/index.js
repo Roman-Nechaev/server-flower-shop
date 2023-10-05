@@ -1,16 +1,22 @@
-const flowers = require("../models/flowers");
+const { Flower } = require("../models/flower/flower");
 
-const { HttpError, CtrlWrapper } = require("../helpers");
+const { HttpError, CtrlWrapper, imgHandler } = require("../helpers");
+const { DEFAULT_IMG } = require("../constants/constants");
 
 const getAll = async (req, res) => {
-  const result = await flowers.getAllFlower();
+  const { page = 1, limit = 5 } = req.query;
+  const skip = (page - 1) * limit;
+  const result = await Flower.find({}, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  });
 
   res.json(result);
 };
 
 const getById = async (req, res) => {
   const { id } = req.params;
-  const result = await flowers.getFlowersById(id);
+  const result = await Flower.findById(id);
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -18,13 +24,44 @@ const getById = async (req, res) => {
 };
 
 const add = async (req, res) => {
-  const result = await flowers.addFlower(req.body);
+  let newLinkToImage = [];
+
+  const { files = [], body: reqBody } = req;
+
+  if (files) {
+    newLinkToImage = await imgHandler(files);
+  } else {
+    newLinkToImage = DEFAULT_IMG;
+  }
+
+  const newFlower = { ...reqBody, pictures: newLinkToImage };
+
+  const result = await Flower.create({ ...newFlower });
+
   res.status(201).json(result);
 };
 
 const updateById = async (req, res) => {
   const { id } = req.params;
-  const result = await flowers.updateFlower(id, req.body);
+  const result = await Flower.findByIdAndUpdate(id, req.body, { new: true });
+  if (!result) {
+    throw HttpError(404, "Not found");
+  }
+  res.status(201).json(result);
+};
+
+const updateNewId = async (req, res) => {
+  const { id } = req.params;
+  const result = await Flower.findByIdAndUpdate(id, req.body, { new: true });
+  if (!result) {
+    throw HttpError(404, "Not found");
+  }
+  res.status(201).json(result);
+};
+
+const updateSaleId = async (req, res) => {
+  const { id } = req.params;
+  const result = await Flower.findByIdAndUpdate(id, req.body, { new: true });
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -33,7 +70,7 @@ const updateById = async (req, res) => {
 
 const deleteById = async (req, res) => {
   const { id } = req.params;
-  const result = await flowers.deleteFlowerId(id);
+  const result = await Flower.findByIdAndRemove(id);
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -45,5 +82,7 @@ module.exports = {
   getById: CtrlWrapper(getById),
   add: CtrlWrapper(add),
   updateById: CtrlWrapper(updateById),
+  updateNewId: CtrlWrapper(updateNewId),
+  updateSaleId: CtrlWrapper(updateSaleId),
   deleteById: CtrlWrapper(deleteById),
 };
