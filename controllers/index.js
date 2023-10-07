@@ -24,17 +24,17 @@ const getById = async (req, res) => {
 };
 
 const add = async (req, res) => {
-  let newLinkToImage = [];
+  let linkToImage = [];
 
   const { files = [], body: reqBody } = req;
 
   if (files) {
-    newLinkToImage = await imgHandler(files);
+    linkToImage = await imgHandler(files);
   } else {
-    newLinkToImage = DEFAULT_IMG;
+    linkToImage = DEFAULT_IMG;
   }
 
-  const newFlower = { ...reqBody, pictures: newLinkToImage };
+  const newFlower = { ...reqBody, pictures: linkToImage };
 
   const result = await Flower.create({ ...newFlower });
 
@@ -68,6 +68,28 @@ const updateSaleId = async (req, res) => {
   res.status(201).json(result);
 };
 
+const createFeedbackId = async (req, res) => {
+  const { id } = req.params;
+  const { author, content, rating, email } = req.body;
+  const product = await Flower.findById(id);
+
+  if (!product) {
+    throw HttpError(404, "Not found");
+  }
+
+  const newReview = {
+    rating,
+    author,
+    content,
+    email,
+    date: new Date(),
+  };
+  product.reviews.push(newReview);
+  const updateProduct = await product.save();
+  console.log("updateProduct", updateProduct);
+  res.status(201).json(newReview);
+};
+
 const deleteById = async (req, res) => {
   const { id } = req.params;
   const result = await Flower.findByIdAndRemove(id);
@@ -85,4 +107,5 @@ module.exports = {
   updateNewId: CtrlWrapper(updateNewId),
   updateSaleId: CtrlWrapper(updateSaleId),
   deleteById: CtrlWrapper(deleteById),
+  createFeedbackId: CtrlWrapper(createFeedbackId),
 };

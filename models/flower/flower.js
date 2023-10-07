@@ -3,6 +3,8 @@ const Joi = require("joi");
 
 const { handleMongooseError } = require("../../helpers");
 
+const emailRegexp = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/;
+
 const flowerSchema = new Schema(
   {
     title: {
@@ -41,6 +43,31 @@ const flowerSchema = new Schema(
       type: [String],
       required: true,
     },
+    reviews: [
+      {
+        author: {
+          type: String,
+          required: true,
+        },
+        email: {
+          type: String,
+          match: emailRegexp,
+          required: [true, "Email is required"],
+          unique: true,
+        },
+        content: {
+          type: String,
+          required: true,
+        },
+        rating: {
+          type: Number,
+        },
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     // owner: {
     //   type: Schema.Types.ObjectId,
     //   ref: "user",
@@ -66,6 +93,13 @@ const updateNewSchema = Joi.object({
   new: Joi.boolean().required(),
 });
 
+const reviewSchema = Joi.object({
+  author: Joi.string().required(),
+  content: Joi.string().required(),
+  email: Joi.string().pattern(emailRegexp, "user@example.com").required(),
+  rating: Joi.number().integer().min(1).max(5).required(),
+});
+
 const updateSaleSchema = Joi.object({
   sale: Joi.boolean().required(),
 });
@@ -74,6 +108,7 @@ const schemas = {
   addSchema,
   updateNewSchema,
   updateSaleSchema,
+  reviewSchema,
 };
 
 flowerSchema.post("save", handleMongooseError);

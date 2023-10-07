@@ -42,6 +42,12 @@ router.patch(
   ctrl.updateSaleId
 );
 
+router.post(
+  "/:id/review",
+  validateBody(schemas.reviewSchema),
+  ctrl.createFeedbackId
+);
+
 router.delete("/:id", authenticate, isValidId, ctrl.deleteById);
 
 //  добавления и удаления товаров из корзины
