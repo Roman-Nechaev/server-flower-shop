@@ -6,6 +6,7 @@ require("dotenv").config();
 
 const authRouter = require("./routes/api/auth");
 const flowersRouter = require("./routes/api/flowers");
+const basketShop = require("./routes/api/basketShop");
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.static("public"));
 
 app.use("/auth", authRouter);
 app.use("/flowers", flowersRouter);
+app.use("/basket", basketShop);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
